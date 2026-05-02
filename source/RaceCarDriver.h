@@ -10,6 +10,7 @@
 
 #include "Racer.h"
 #include <vector>
+#include <queue>
 using namespace std;
 
 
@@ -17,6 +18,7 @@ using namespace std;
 class RaceCarDriver{
 private:
     Racer* car;
+
 
     struct vertex {
 
@@ -34,8 +36,21 @@ private:
         int y = 0;
         int iteration = 0;
         DIRECTION dPrev = NORTH;
+        int weight = 0;
+        int color  = 0;
+        vertex* v = nullptr;
+
+        bool operator<(const vertex& two) const{
+            if(x != two.x) {
+                return x < two.x;
+            }
+            return y < two.y;
+        }
+
+
 
     };
+
 
 
 public:
@@ -62,6 +77,15 @@ public:
         return -1;
     }
 
+    bool isInAdjacencyList(map<vertex,vector<vertex>> s, vertex v,vertex v2) {
+        for(int i = 0; i < s[v].size();++i) {
+            if(s[v].at(i).x==v2.x && s[v].at(i).y==v2.y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     vertex addDirection(vertex v, DIRECTION d) {
         if(d == NORTH) {
@@ -78,10 +102,12 @@ public:
         }
         return v;
     }
-    vector<vertex> s;
-    DIRECTION prev = NORTH;
 
-    DIRECTION nextMove(){
+    DIRECTION nextMove() {
+        static vector<vertex> s;
+        static map<vertex,vector<vertex>> adjacency_list;
+        static bool start = true;
+        static int numRun = 0;
         DIRECTION d = NORTH;
 
 
@@ -89,58 +115,92 @@ public:
         if(car->getLocation().x == 0 && car->getLocation().y==0) {
             s.clear();
             s.emplace(s.begin(),v);
+            ++numRun;
+            start = false;
         }
-        v = s.at(0);
+            v = s.at(0);
 
+        if(numRun==1) {
+            while(v.iteration < 4) {
+                if(!car->look(v.d) && !isOn(s,addDirection(v,v.d))) {
+                    vertex v2 = addDirection(v,v.d);
+                    if(!isInAdjacencyList(adjacency_list,v,v2)) {
+                        adjacency_list[v].push_back(v2);
+                        adjacency_list[v2].push_back(v);
+                    }
+                    v.status=1;
+                    d = v.d;
+                    v2.dPrev = d;
+                    // prev = DIRECTION(v.d%4);
+                    v.d = DIRECTION((v.d+1) % 4);
+                    v.iteration+=1;
+                    s[0] = v;
+                    v2.status = 0;
+                    v2.iteration = 0;
+                    v2.d = NORTH;
 
-        int done = false;
-        while(v.iteration < 4) {
-
-            if(!car->look(v.d) && !isOn(s,addDirection(v,v.d))) {
-                vertex v2 = addDirection(v,v.d);
-                v.status=1;
-                d = v.d;
-                v2.dPrev = v.d;
-                prev = DIRECTION(v.d%4);
-                v.d = DIRECTION((v.d+1) % 4);
+                    s.emplace(s.begin(),v2);
+                    return d;
+                }
+                v.d = DIRECTION((v.d+1)%4);
                 v.iteration+=1;
-                s[0] = v;
-                v2.status = 0;
-                v2.iteration = 0;
-                v2.d = NORTH;
 
-                s.emplace(s.begin(),v2);
+            }
+        }
+            v.status=2;
+
+            s.erase(s.begin());
+
+
+            if(s.empty()) {
+                start = true;
                 return d;
             }
-            v.d = DIRECTION(v.d+1);
-            v.iteration+=1;
-
-        }
-        v.status=2;
-        prev = v.dPrev;
-        s.erase(s.begin());
 
 
-        if(s.empty()) {
-            return d;
+            if(v.dPrev == NORTH) {
+                return SOUTH;
+            }
+            if( v.dPrev == SOUTH) {
+                return NORTH;
+            }
+            if( v.dPrev == EAST) {
+                return WEST;
+            }
+            return EAST;
         }
-        DIRECTION previous = s.at(0).d;
 
-        if(prev == NORTH) {
-            prev = SOUTH;
-            return SOUTH;
-        }
-        if(prev == SOUTH) {
-            prev = NORTH;
-            return NORTH;
-        }
-        if(prev == EAST) {
-            prev = WEST;
-            return WEST;
-        }
-        prev = EAST;
-        return EAST;
-    }
+
+        /*
+            queue<vertex> q;
+            q.push(v);
+            vertex prevVert = v;
+            while(!q.empty()) {
+                vertex v3 = q.front();
+                v3.color = 0;
+                q.pop();
+                for(int i = 0; i < adjacency_list[v3].size();++i) {
+                    vertex v4 = adjacency_list[v3].at(i);
+                    if(v4.color==0) {
+                        v4.color = 1;
+                        v4.d = DIRECTION((v.d+1)%4);
+                        v4.v = &v;
+                        q.push(v4);
+                        for(int i = 0; i < 4; ++i) {
+                            if(addDirection(v3,DIRECTION((v3.d+i)%4)).x==v4.x
+                                && addDirection(v3,DIRECTION((v3.d+i)%4)).y==v4.y) {
+                                return d;
+                                }
+                        }
+                    }
+                }
+                v3.color = 2;
+
+            }
+            */
+
+
+
 
 };
 
