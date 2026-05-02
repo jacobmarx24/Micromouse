@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 4.1)
 project(Micromouse)
 
 set(CMAKE_CXX_STANDARD 11)
-include_directories(/opt/homebrew/include/)
-link_directories(/opt/homebrew/lib)
 
+add_subdirectory(SDL EXCLUDE_FROM_ALL)
+add_subdirectory(SDL_mixer EXCLUDE_FROM_ALL)
 
 add_executable(Micromouse main.cpp
         RaceCarDriver.h
