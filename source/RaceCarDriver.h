@@ -11,11 +11,13 @@
 #include "Racer.h"
 #include <vector>
 #include <queue>
+#include <stack>
+#include <map>
 using namespace std;
 
 
 
-class RaceCarDriver{
+class RaceCarDriver {
 private:
     Racer* car;
 
@@ -30,15 +32,21 @@ private:
             dPrev = prev;
         }
 
+        vertex() {
+            x = 0;
+            y = 0;
+            d = NORTH;
+            iteration = 0;
+            dPrev = NORTH;
+        }
+
         DIRECTION d = NORTH;
         int status = 0;
         int x = 0;
         int y = 0;
         int iteration = 0;
         DIRECTION dPrev = NORTH;
-        int weight = 0;
-        int color  = 0;
-        vertex* v = nullptr;
+        int visited = 0;
 
         bool operator<(const vertex& two) const{
             if(x != two.x) {
@@ -46,7 +54,14 @@ private:
             }
             return y < two.y;
         }
-
+/*
+        bool operator==(const vertex& two) const {
+            if(x==two.x && y == two.y) {
+                return true;
+            }
+            return false;
+        }
+        */
 
 
     };
@@ -56,9 +71,7 @@ private:
 public:
     RaceCarDriver(Racer* p = nullptr): car{p}{}
 
-
-
-
+    
     bool isOn(vector<vertex> p,vertex v) {
         for(int i = 0; i<p.size();++i) {
             if(p.at(i).x==v.x && p.at(i).y==v.y) {
@@ -68,14 +81,6 @@ public:
         return false;
     }
 
-    int findX(vector<vertex> p,vertex v) {
-        for(int i = 0; i<p.size();++i) {
-            if(p.at(i).x==v.x && p.at(1).y==v.y) {
-                return i;
-            }
-        }
-        return -1;
-    }
 
     bool isInAdjacencyList(map<vertex,vector<vertex>> s, vertex v,vertex v2) {
         for(int i = 0; i < s[v].size();++i) {
@@ -103,41 +108,114 @@ public:
         return v;
     }
 
+
+    static vector<vertex> BFS(map<vertex,vector<vertex>> adj_list,vertex word, vertex end,queue<vertex> q) {
+        map<vertex,vertex> prev;
+        set<pair<int,int>> visited;
+
+        prev[word] = word;
+        q.push(word);
+        vertex endLocation = end;
+        bool isEnd = false;
+        while(isEnd == false && !q.empty()) {
+            word = q.front();
+            q.pop();
+            for(int i = 0; i < adj_list[word].size();++i) {
+                if(visited.find({adj_list[word].at(i).x,adj_list[word].at(i).y})==visited.end()) {
+                    visited.insert({adj_list[word].at(i).x,adj_list[word].at(i).y});
+                    prev[adj_list[word].at(i)] = word;
+                    q.push(adj_list[word].at(i));
+
+                    if(adj_list[word].at(i).x==endLocation.x &&
+                        adj_list[word].at(i).y==endLocation.y) {
+                        prev[endLocation] = word;
+                        isEnd = true;
+                        }
+                }
+            }
+        }
+        stack<vertex> rev;
+        while(!(endLocation.x == 0 && endLocation.y == 0)) {
+            rev.push(endLocation);
+            endLocation = prev[endLocation];
+        }
+        vector<vertex> actual;
+        while(!rev.empty()) {
+            actual.push_back(rev.top());
+            rev.pop();
+        }
+
+
+        return actual;
+    }
+
     DIRECTION nextMove() {
+        static queue<vertex> q;
         static vector<vertex> s;
         static map<vertex,vector<vertex>> adjacency_list;
         static bool start = true;
         static int numRun = 0;
-        DIRECTION d = NORTH;
+        static int pathInd = 0;
+        vertex starting;
+        static vertex end;
+        static vertex toEnd;
+        static bool gotStart = false;
+        vector<vertex> static rev;
+        static map<vertex,vertex> path;
 
+        DIRECTION d = NORTH;
+        if(numRun==0 && !gotStart) {
+            starting.x = car->getLocation().x;
+            starting.y = car->getLocation().y;
+            gotStart = true;
+        }
 
         vertex v(0,0,NORTH,0,NORTH);
-        if(car->getLocation().x == 0 && car->getLocation().y==0) {
+        if(car->getLocation().x==starting.x
+            && car->getLocation().y==starting.y) {
+
             s.clear();
             s.emplace(s.begin(),v);
             ++numRun;
             start = false;
+            pathInd = 0;
+            if(numRun==2) {
+                 end = vertex(toEnd.x,toEnd.y,toEnd.d,toEnd.iteration,toEnd.dPrev);
+            }
         }
-            v = s.at(0);
+        v = s.at(0);
 
         if(numRun==1) {
             while(v.iteration < 4) {
                 if(!car->look(v.d) && !isOn(s,addDirection(v,v.d))) {
                     vertex v2 = addDirection(v,v.d);
-                    if(!isInAdjacencyList(adjacency_list,v,v2)) {
-                        adjacency_list[v].push_back(v2);
-                        adjacency_list[v2].push_back(v);
-                    }
                     v.status=1;
                     d = v.d;
                     v2.dPrev = d;
+                    if(d == SOUTH) {
+                        v2.dPrev=NORTH;
+                    }
+                    else if(d == NORTH) {
+                        v2.dPrev = SOUTH;
+                    }
+                    else if(d==EAST) {
+                        v2.dPrev=WEST;
+                    }
+                    else {
+                        v2.dPrev=EAST;
+                    }
+                    v2.d = d;
                     // prev = DIRECTION(v.d%4);
                     v.d = DIRECTION((v.d+1) % 4);
                     v.iteration+=1;
                     s[0] = v;
                     v2.status = 0;
                     v2.iteration = 0;
-                    v2.d = NORTH;
+                    toEnd=v2;
+                    if(!isInAdjacencyList(adjacency_list,v,v2)) {
+                        adjacency_list[v].push_back(v2);
+                        adjacency_list[v2].push_back(v);
+                    }
 
                     s.emplace(s.begin(),v2);
                     return d;
@@ -146,7 +224,7 @@ public:
                 v.iteration+=1;
 
             }
-        }
+
             v.status=2;
 
             s.erase(s.begin());
@@ -157,48 +235,30 @@ public:
                 return d;
             }
 
-
             if(v.dPrev == NORTH) {
-                return SOUTH;
-            }
-            if( v.dPrev == SOUTH) {
                 return NORTH;
             }
-            if( v.dPrev == EAST) {
-                return WEST;
+            if( v.dPrev == SOUTH) {
+                return SOUTH;
             }
-            return EAST;
+            if( v.dPrev == EAST) {
+                return EAST;
+            }
+            return WEST;
         }
 
-
-        /*
-            queue<vertex> q;
-            q.push(v);
-            vertex prevVert = v;
-            while(!q.empty()) {
-                vertex v3 = q.front();
-                v3.color = 0;
-                q.pop();
-                for(int i = 0; i < adjacency_list[v3].size();++i) {
-                    vertex v4 = adjacency_list[v3].at(i);
-                    if(v4.color==0) {
-                        v4.color = 1;
-                        v4.d = DIRECTION((v.d+1)%4);
-                        v4.v = &v;
-                        q.push(v4);
-                        for(int i = 0; i < 4; ++i) {
-                            if(addDirection(v3,DIRECTION((v3.d+i)%4)).x==v4.x
-                                && addDirection(v3,DIRECTION((v3.d+i)%4)).y==v4.y) {
-                                return d;
-                                }
-                        }
-                    }
-                }
-                v3.color = 2;
-
+        if(numRun>1) {
+            if(pathInd==0) {
+                rev = BFS(adjacency_list, v,end, q);
             }
-            */
+            do {
+                return rev.at(pathInd++).d;
+            }while(rev.at(pathInd-1).x != end.x && rev.at(pathInd-1).y!=end.y);
 
+        }
+        return d;
+
+    }
 
 
 
