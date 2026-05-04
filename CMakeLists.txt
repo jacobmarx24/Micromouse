@@ -6,13 +6,13 @@ include_directories(/opt/homebrew/include/)
 link_directories(/opt/homebrew/lib)
 
 
-add_executable(Micromouse main.cpp
-        RaceCarDriver.h
-        constants.h
-        Racer.h
-        timer.h
-        DisjointSet.h
-        SDL_Plotter.cpp
-        SDL_Plotter.h)
+add_executable(Micromouse source/main.cpp
+        source/RaceCarDriver.h
+        source/constants.h
+        source/Racer.h
+        source/timer.h
+        source/DisjointSet.h
+        source/SDL_Plotter.cpp
+        source/SDL_Plotter.h)
 
 target_link_libraries(${PROJECT_NAME} SDL2 SDL2_mixer)

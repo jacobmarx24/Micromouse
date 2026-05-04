@@ -20,7 +20,7 @@ class Racer{
 
 private:
 	point location, prevLocation;
-	color color;
+	color color1;
 	int   size;
 	bool  alive;
 	bool  finished;
