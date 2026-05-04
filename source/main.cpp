@@ -86,7 +86,7 @@ int main(int argc, char ** argv)
 	//buildMaze(false, cells, walls, g);
     //saveMaze(walls, "wallMaze3.txt");
 
-    readMaze(walls, "wallMaze1.txt");
+    readMaze(walls, "maze.txt");
     //readMaze(walls, "wallMaze2.txt");
     //readMaze(walls, "wallMaze3.txt");
 

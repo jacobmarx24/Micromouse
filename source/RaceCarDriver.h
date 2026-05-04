@@ -1,9 +1,11 @@
 /*
-* RaceCarDriver.h
- *
- *  Created on: Spring, 2026
- *      Author: bill_booth
- */
+* Author: Elias Tovar, Jacob Marx, Jeffery Rajkumar, Gavin Pena, Kenneth Falato
+* Assignment Title: Micromouse
+* Assignment Description: Drives micromouse through maze for fast times.
+* Due Date: 4/3/2026
+* Date Created: 3/27/2026
+* Date Last Modified: 4/3/2026
+*/
 
 #ifndef RACECARDRIVER_H_
 #define RACECARDRIVER_H_
@@ -72,6 +74,13 @@ private:
 public:
     RaceCarDriver(Racer* p = nullptr): car{p} {}
 
+    /*
+ * description: returns true if vertex v is in vector p.
+ * return: bool
+ * precondition: p and v are valid
+ * postcondition: returns true or false, no edit to given variables.
+ *
+*/
     bool isOn(vector<vertex> p, vertex v) {
         for(int i = 0; i < p.size(); ++i) {
             if(p.at(i).x == v.x && p.at(i).y == v.y) {
@@ -81,6 +90,13 @@ public:
         return false;
     }
 
+    /*
+ * description: returns true if given vertex is in graph
+ * return: bool
+ * precondition: s, v1 and v2 are valid
+ * postcondition: returns true or false, no edit to given variables.
+ *
+*/
     bool isInAdjacencyList(map<vertex,vector<vertex>> s, vertex v, vertex v2) {
         for(int i = 0; i < s[v].size(); ++i) {
             if(s[v].at(i).x == v2.x && s[v].at(i).y == v2.y) {
@@ -106,6 +122,13 @@ public:
         return v;
     }
 
+    /*
+* description: Breadth First Search
+* return: vector<vertex>
+* precondition: given graph is filled with nodes
+* postcondition: returns a vector<vertex> as the path through
+*
+*/
     static vector<vertex> BFS(map<vertex,vector<vertex>> adj_list, vertex word, vertex end, queue<vertex> q) {
         map<vertex,vertex> prev;
         set<pair<int,int>> visited;
@@ -148,6 +171,13 @@ public:
         return actual;
     }
 
+    /*
+* description: Depth First Search, first run
+* return: DIRECTION, used in recursion
+* precondition: given graph is filled with nodes
+* postcondition: moves the car following DFS
+*
+*/
     DIRECTION DFS1(vertex& v) {
         DIRECTION d = NORTH;
 
@@ -207,6 +237,13 @@ public:
         return WEST;
     }
 
+    /*
+* description: Depth First Search, second run
+* return: DIRECTION, used in recursion
+* precondition: given graph is filled with nodes
+* postcondition: moves the car following DFS
+*
+*/
     DIRECTION DFS2(vertex& v) {
         DIRECTION d = NORTH;
 
@@ -266,6 +303,13 @@ public:
         return WEST;
     }
 
+    /*
+* description: called by the driver, this is the next move of the car
+* return: DIRECTION
+* precondition: car is constructed
+* postcondition: determines run# and moves the car depending on the run#
+*
+*/
     DIRECTION nextMove() {
         DIRECTION d = NORTH;
 
