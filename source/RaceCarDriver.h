@@ -1,5 +1,6 @@
 /*
-* Author: Elias Tovar, Jacob Marx, Jeffery Rajkumar, Gavin Pena, Kenneth Falato
+* Author: Group Five
+* Elias Tovar, Jacob Marx, Jeffery Rajkumar, Gavin Pena, Kenneth Falato
 * Assignment Title: Micromouse
 * Assignment Description: Drives micromouse through maze for fast times.
 * Due Date: 4/3/2026
@@ -55,21 +56,6 @@ private:
         }
 
     };
-
-    queue<vertex> q;
-    vector<vertex> s;
-    map<vertex,vector<vertex>> adjacency_list;
-    bool start = true;
-    int numRun = 0;
-    int pathInd = 0;
-    vertex starting;
-    vertex end;
-    vertex toEnd;
-    bool gotStart = false;
-    vector<vertex> rev;
-    map<vertex,vertex> path;
-    bool justReset = true;
-
 
 public:
     RaceCarDriver(Racer* p = nullptr): car{p} {}
@@ -178,7 +164,8 @@ public:
 * postcondition: moves the car following DFS
 *
 */
-    DIRECTION DFS1(vertex& v) {
+    DIRECTION DFS1(vertex& v, vector<vertex>& s,
+        vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start) {
         DIRECTION d = NORTH;
 
         while(v.iteration < 4) {
@@ -244,7 +231,8 @@ public:
 * postcondition: moves the car following DFS
 *
 */
-    DIRECTION DFS2(vertex& v) {
+    DIRECTION DFS2(vertex& v, vector<vertex>& s,
+        vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start) {
         DIRECTION d = NORTH;
 
         while(v.iteration < 4) {
@@ -310,7 +298,23 @@ public:
 * postcondition: determines run# and moves the car depending on the run#
 *
 */
-    DIRECTION nextMove() {
+    //TODO: change function names
+    //TODO: change getLocation calls
+    DIRECTION nextMove(int numRun = 0) {
+        static queue<vertex> q;
+        static vector<vertex> s;
+        static map<vertex,vector<vertex>> adjacency_list;
+        static bool start = true;
+        //static int numRun = 0;
+        static int pathInd = 0;
+        static vertex starting;
+        static vertex end;
+        static vertex toEnd;
+        static bool gotStart = false;
+        static vector<vertex> rev;
+        static map<vertex,vertex> path;
+        static bool justReset = true;
+
         DIRECTION d = NORTH;
 
         if(numRun == 0 && !gotStart) {
@@ -328,7 +332,7 @@ public:
             start = false;
             pathInd = 0;
             justReset = true;
-            if(numRun == 2) {
+            if(numRun == 1) {
                 end = vertex(toEnd.x, toEnd.y, toEnd.d, toEnd.iteration, toEnd.dPrev);
             }
         }
@@ -339,19 +343,19 @@ public:
             justReset = false;
         }
 
+        if(numRun == 0) {
+            return DFS1(v, s, toEnd, adjacency_list, start);
+        }
+
         if(numRun == 1) {
-            return DFS1(v);
+            return DFS2(v, s, toEnd, adjacency_list, start);
         }
 
-        if(numRun == 2) {
-            return DFS2(v);
-        }
-
-        if(numRun > 2) {
+        if(numRun > 1) {
             if(pathInd == 0) {
                 rev = BFS(adjacency_list, v, end, q);
             }
-            return rev.at(pathInd++).d;
+            return rev.at(pathInd++).d; //TODO: crash here
         }
 
         return d;
