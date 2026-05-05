@@ -67,7 +67,7 @@ public:
  * postcondition: returns true or false, no edit to given variables.
  *
 */
-    bool isOn(vector<vertex> p, vertex v) {
+    bool isOnTeamFive(vector<vertex> p, vertex v) {
         for(int i = 0; i < p.size(); ++i) {
             if(p.at(i).x == v.x && p.at(i).y == v.y) {
                 return true;
@@ -83,7 +83,7 @@ public:
  * postcondition: returns true or false, no edit to given variables.
  *
 */
-    bool isInAdjacencyList(map<vertex,vector<vertex>> s, vertex v, vertex v2) {
+    bool isInAdjacencyListTeamFive(map<vertex,vector<vertex>> s, vertex v, vertex v2) {
         for(int i = 0; i < s[v].size(); ++i) {
             if(s[v].at(i).x == v2.x && s[v].at(i).y == v2.y) {
                 return true;
@@ -92,7 +92,14 @@ public:
         return false;
     }
 
-    vertex addDirection(vertex v, DIRECTION d) {
+    /*
+* description: returns the next vertex in the given direction from the given vertex
+* return: vertex
+* precondition: v and d are valid
+* postcondition: returns new vertex
+*
+*/
+    vertex addDirectionTeamFive(vertex v, DIRECTION d) {
         if(d == NORTH) {
             v.y -= 1;
         }
@@ -115,7 +122,7 @@ public:
 * postcondition: returns a vector<vertex> as the path through
 *
 */
-    static vector<vertex> BFS(map<vertex,vector<vertex>> adj_list, vertex word, vertex end, queue<vertex> q) {
+    static vector<vertex> BFSTeamFive(map<vertex,vector<vertex>> adj_list, vertex word, vertex end, queue<vertex> q) {
         map<vertex,vertex> prev;
         set<pair<int,int>> visited;
 
@@ -164,13 +171,13 @@ public:
 * postcondition: moves the car following DFS
 *
 */
-    DIRECTION DFS1(vertex& v, vector<vertex>& s,
+    DIRECTION DFS1TeamFive(vertex& v, vector<vertex>& s,
         vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start) {
         DIRECTION d = NORTH;
 
         while(v.iteration < 4) {
-            if(!car->look(v.d) && !isOn(s, addDirection(v, v.d))) {
-                vertex v2 = addDirection(v, v.d);
+            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d))) {
+                vertex v2 = addDirectionTeamFive(v, v.d);
                 v.status = 1;
                 d = v.d;
                 v2.dPrev = d;
@@ -193,7 +200,7 @@ public:
                 v2.status = 0;
                 v2.iteration = 0;
                 toEnd = v2;
-                if(!isInAdjacencyList(adjacency_list, v, v2)) {
+                if(!isInAdjacencyListTeamFive(adjacency_list, v, v2)) {
                     adjacency_list[v].push_back(v2);
                     adjacency_list[v2].push_back(v);
                 }
@@ -231,13 +238,13 @@ public:
 * postcondition: moves the car following DFS
 *
 */
-    DIRECTION DFS2(vertex& v, vector<vertex>& s,
+    DIRECTION DFS2TeamFive(vertex& v, vector<vertex>& s,
         vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start) {
         DIRECTION d = NORTH;
 
         while(v.iteration < 4) {
-            if(!car->look(v.d) && !isOn(s, addDirection(v, v.d))) {
-                vertex v2 = addDirection(v, v.d);
+            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d))) {
+                vertex v2 = addDirectionTeamFive(v, v.d);
                 v.status = 1;
                 d = v.d;
                 v2.dPrev = d;
@@ -260,7 +267,7 @@ public:
                 v2.status = 0;
                 v2.iteration = 0;
                 toEnd = v2;
-                if(!isInAdjacencyList(adjacency_list, v, v2)) {
+                if(!isInAdjacencyListTeamFive(adjacency_list, v, v2)) {
                     adjacency_list[v].push_back(v2);
                     adjacency_list[v2].push_back(v);
                 }
@@ -298,9 +305,8 @@ public:
 * postcondition: determines run# and moves the car depending on the run#
 *
 */
-    //TODO: change function names
-    //TODO: change getLocation calls
-    DIRECTION nextMove(int numRun = 0) {
+    //TODO: remove getLocation calls
+    DIRECTION nextMoveTeamFive(int numRun = 0) {
         static queue<vertex> q;
         static vector<vertex> s;
         static map<vertex,vector<vertex>> adjacency_list;
@@ -344,16 +350,16 @@ public:
         }
 
         if(numRun == 0) {
-            return DFS1(v, s, toEnd, adjacency_list, start);
+            return DFS1TeamFive(v, s, toEnd, adjacency_list, start);
         }
 
         if(numRun == 1) {
-            return DFS2(v, s, toEnd, adjacency_list, start);
+            return DFS2TeamFive(v, s, toEnd, adjacency_list, start);
         }
 
         if(numRun > 1) {
             if(pathInd == 0) {
-                rev = BFS(adjacency_list, v, end, q);
+                rev = BFSTeamFive(adjacency_list, v, end, q);
             }
             return rev.at(pathInd++).d; //TODO: crash here
         }
