@@ -115,6 +115,16 @@ public:
         return v;
     }
 
+    bool findTeam5(vector<vertex> v, vertex x) {
+        for(vertex u: v) {
+            if(u.x == x.x && u.y == x.y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     /*
 * description: Breadth First Search
 * return: vector<vertex>
@@ -239,12 +249,58 @@ public:
 *
 */
     DIRECTION DFS2TeamFive(vertex& v, vector<vertex>& s,
-        vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start) {
-        DIRECTION d = NORTH;
+        vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start ,map<vertex,vector<vertex>>& visited) {
 
+        DIRECTION d = NORTH;
+        DIRECTION oldD = v.d;
         while(v.iteration < 4) {
-            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d))) {
-                vertex v2 = addDirectionTeamFive(v, v.d);
+            vertex v2 = addDirectionTeamFive(v, v.d);
+            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d)) &&  !isInAdjacencyListTeamFive(adjacency_list,v,v2)
+                && !findTeam5(visited[v],v2)) {
+                    visited[v].push_back(v2);
+
+                    v.status = 1;
+                    d = v.d;
+                    v2.dPrev = d;
+                    if(d == SOUTH) {
+                        v2.dPrev = NORTH;
+                    }
+                    else if(d == NORTH) {
+                        v2.dPrev = SOUTH;
+                    }
+                    else if(d == EAST) {
+                        v2.dPrev = WEST;
+                    }
+                    else {
+                        v2.dPrev = EAST;
+                    }
+                    v2.d = d;
+                    visited[v2].push_back(v);
+                    v.d = DIRECTION((v.d + 1) % 4);
+                    v.iteration += 1;
+                    s[0] = v;
+                    v2.status = 0;
+                    v2.iteration = 0;
+                    toEnd = v2;
+                    if(!isInAdjacencyListTeamFive(adjacency_list, v, v2)) {
+                        adjacency_list[v].push_back(v2);
+                        adjacency_list[v2].push_back(v);
+                    }
+                    s.emplace(s.begin(), v2);
+                    return d;
+            }
+
+
+            v.d = DIRECTION((v.d + 1) % 4);
+            v.iteration += 1;
+        }
+
+        v.iteration = 0;
+        v.d=oldD;
+        while(v.iteration < 4) {
+            vertex v2 = addDirectionTeamFive(v, v.d);
+            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d)) && !findTeam5(visited[v],v2)) {
+                visited[v].push_back(v2);
                 v.status = 1;
                 d = v.d;
                 v2.dPrev = d;
@@ -261,20 +317,17 @@ public:
                     v2.dPrev = EAST;
                 }
                 v2.d = d;
-                v.d = DIRECTION((v.d + 3) % 4);
+                v.d = DIRECTION((v.d + 1) % 4);
                 v.iteration += 1;
                 s[0] = v;
                 v2.status = 0;
                 v2.iteration = 0;
+                visited[v2].push_back(v);
                 toEnd = v2;
-                if(!isInAdjacencyListTeamFive(adjacency_list, v, v2)) {
-                    adjacency_list[v].push_back(v2);
-                    adjacency_list[v2].push_back(v);
-                }
                 s.emplace(s.begin(), v2);
                 return d;
             }
-            v.d = DIRECTION((v.d + 3) % 4);
+            v.d = DIRECTION((v.d + 1) % 4);
             v.iteration += 1;
         }
 
@@ -282,7 +335,6 @@ public:
         s.erase(s.begin());
 
         if(s.empty()) {
-            start = true;
             return d;
         }
 
@@ -296,6 +348,7 @@ public:
             return EAST;
         }
         return WEST;
+
     }
 
     /*
@@ -305,13 +358,11 @@ public:
 * postcondition: determines run# and moves the car depending on the run#
 *
 */
-    //TODO: remove getLocation calls
-    DIRECTION nextMoveTeamFive(int numRun = 0) {
+    DIRECTION nextMoveTeamFive(int run = 0) {
         static queue<vertex> q;
         static vector<vertex> s;
         static map<vertex,vector<vertex>> adjacency_list;
         static bool start = true;
-        //static int numRun = 0;
         static int pathInd = 0;
         static vertex starting;
         static vertex end;
@@ -320,28 +371,26 @@ public:
         static vector<vertex> rev;
         static map<vertex,vertex> path;
         static bool justReset = true;
+        static int currRun = -1;
+        static map<vertex,vector<vertex>> visited;
+
 
         DIRECTION d = NORTH;
 
-        if(numRun == 0 && !gotStart) {
-            starting.x = car->getLocation().x;
-            starting.y = car->getLocation().y;
-            gotStart = true;
-        }
-
         vertex v(0, 0, NORTH, 0, NORTH);
 
-        if(car->getLocation().x == starting.x && car->getLocation().y == starting.y) {
+        if(currRun < run) {
+            if(run == 1) {
+
+                end = toEnd;
+            }
             s.clear();
             s.emplace(s.begin(), v);
-            ++numRun;
-            start = false;
+            ++currRun;
             pathInd = 0;
-            justReset = true;
-            if(numRun == 1) {
-                end = vertex(toEnd.x, toEnd.y, toEnd.d, toEnd.iteration, toEnd.dPrev);
-            }
+
         }
+
 
         v = s.at(0);
 
@@ -349,15 +398,15 @@ public:
             justReset = false;
         }
 
-        if(numRun == 0) {
+        if(run == 0) {
             return DFS1TeamFive(v, s, toEnd, adjacency_list, start);
         }
 
-        if(numRun == 1) {
-            return DFS2TeamFive(v, s, toEnd, adjacency_list, start);
+        if(run == 1) {
+            return DFS2TeamFive(v, s, toEnd, adjacency_list, start,visited);
         }
 
-        if(numRun > 1) {
+        if(run > 1) {
             if(pathInd == 0) {
                 rev = BFSTeamFive(adjacency_list, v, end, q);
             }
