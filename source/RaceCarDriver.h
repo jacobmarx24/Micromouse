@@ -1,4 +1,17 @@
 /*
+ * Integration requirements:
+ * Vertex struct
+ * isInAdjacencyListTeamFive()
+ * isOnTeamFive()
+ * addDirectionTeamFive()
+ * findTeam5()
+ * BFSTeamFive()
+ * DFS1TeamFive()
+ * DFS2TeamFive()
+ * nextMoveTeamFive()
+ */
+
+/*
 * Author: Group Five
 * Elias Tovar, Jacob Marx, Jeffery Rajkumar, Gavin Pena, Kenneth Falato
 * Assignment Title: Micromouse
@@ -410,7 +423,7 @@ public:
             if(pathInd == 0) {
                 rev = BFSTeamFive(adjacency_list, v, end, q);
             }
-            return rev.at(pathInd++).d; //TODO: crash here
+            return rev.at(pathInd++).d;
         }
 
         return d;

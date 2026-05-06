@@ -117,7 +117,7 @@ clock.reset();
 					case DOWN_ARROW:  robot.move(SOUTH); break;
 
 				}
-				robot.move(driver.nextMove(runCount));
+				robot.move(driver.nextMoveTeamFive(runCount));
 				legalMove(robot, walls);
 				robot.draw(g);
 				g.update();
@@ -128,7 +128,7 @@ clock.reset();
 			if(g.mouseClick()){
 			}
 
-			robot.move(driver.nextMove(runCount));
+			robot.move(driver.nextMoveTeamFive(runCount));
 			legalMove(robot, walls);
 			robot.draw(g);
 			g.update();
