@@ -1,11 +1,24 @@
 /*
+ * Integration requirements:
+ * vertexTeam5 struct
+ * isInAdjacencyListTeamFive()
+ * isOnTeamFive()
+ * addDirectionTeamFive()
+ * findTeam5()
+ * BFSTeamFive()
+ * DFS1TeamFive()
+ * DFS2TeamFive()
+ * nextMoveTeamFive()
+ */
+
+/*
 * Author: Group Five
 * Elias Tovar, Jacob Marx, Jeffery Rajkumar, Gavin Pena, Kenneth Falato
 * Assignment Title: Micromouse
 * Assignment Description: Drives micromouse through maze for fast times.
-* Due Date: 4/3/2026
-* Date Created: 3/27/2026
-* Date Last Modified: 4/3/2026
+* Due Date: 5/6/2026
+* Date Created: 4/29/2026
+* Date Last Modified: 5/6/2026
 */
 
 #ifndef RACECARDRIVER_H_
@@ -22,9 +35,9 @@ using namespace std;
 class RaceCarDriver {
 private:
     Racer* car;
-    struct vertex {
+    struct vertexTeam5 {
 
-        vertex(int x1, int y1, DIRECTION d1, int iteration1, DIRECTION prev) {
+        vertexTeam5(int x1, int y1, DIRECTION d1, int iteration1, DIRECTION prev) {
             x = x1;
             y = y1;
             d = d1;
@@ -32,7 +45,7 @@ private:
             dPrev = prev;
         }
 
-        vertex() {
+        vertexTeam5() {
             x = 0;
             y = 0;
             d = NORTH;
@@ -47,8 +60,9 @@ private:
         int iteration = 0;
         DIRECTION dPrev = NORTH;
         int visited = 0;
+        bool explored = false;
 
-        bool operator<(const vertex& two) const {
+        bool operator<(const vertexTeam5& two) const {
             if(x != two.x) {
                 return x < two.x;
             }
@@ -67,7 +81,7 @@ public:
  * postcondition: returns true or false, no edit to given variables.
  *
 */
-    bool isOnTeamFive(vector<vertex> p, vertex v) {
+    bool isOnTeamFive(vector<vertexTeam5> p, vertexTeam5 v) {
         for(int i = 0; i < p.size(); ++i) {
             if(p.at(i).x == v.x && p.at(i).y == v.y) {
                 return true;
@@ -83,7 +97,7 @@ public:
  * postcondition: returns true or false, no edit to given variables.
  *
 */
-    bool isInAdjacencyListTeamFive(map<vertex,vector<vertex>> s, vertex v, vertex v2) {
+    bool isInAdjacencyListTeamFive(map<vertexTeam5,vector<vertexTeam5>> s, vertexTeam5 v, vertexTeam5 v2) {
         for(int i = 0; i < s[v].size(); ++i) {
             if(s[v].at(i).x == v2.x && s[v].at(i).y == v2.y) {
                 return true;
@@ -99,7 +113,7 @@ public:
 * postcondition: returns new vertex
 *
 */
-    vertex addDirectionTeamFive(vertex v, DIRECTION d) {
+    vertexTeam5 addDirectionTeamFive(vertexTeam5 v, DIRECTION d) {
         if(d == NORTH) {
             v.y -= 1;
         }
@@ -115,8 +129,8 @@ public:
         return v;
     }
 
-    bool findTeam5(vector<vertex> v, vertex x) {
-        for(vertex u: v) {
+    bool findTeam5(vector<vertexTeam5> v, vertexTeam5 x) {
+        for(vertexTeam5 u: v) {
             if(u.x == x.x && u.y == x.y) {
                 return true;
             }
@@ -132,13 +146,13 @@ public:
 * postcondition: returns a vector<vertex> as the path through
 *
 */
-    static vector<vertex> BFSTeamFive(map<vertex,vector<vertex>> adj_list, vertex word, vertex end, queue<vertex> q) {
-        map<vertex,vertex> prev;
+    static vector<vertexTeam5> BFSTeamFive(map<vertexTeam5,vector<vertexTeam5>> adj_list, vertexTeam5 word, vertexTeam5 end, queue<vertexTeam5> q) {
+        map<vertexTeam5,vertexTeam5> prev;
         set<pair<int,int>> visited;
-
+        vertexTeam5 start = word;
         prev[word] = word;
         q.push(word);
-        vertex endLocation = end;
+        vertexTeam5 endLocation = end;
         bool isEnd = false;
 
         while(isEnd == false && !q.empty()) {
@@ -152,25 +166,26 @@ public:
 
                     if(adj_list[word].at(i).x == endLocation.x &&
                         adj_list[word].at(i).y == endLocation.y) {
-                        prev[endLocation] = word;
+                        prev[adj_list[word].at(i)] = word;
                         isEnd = true;
                     }
                 }
             }
         }
 
-        stack<vertex> rev;
-        while(!(endLocation.x == 0 && endLocation.y == 0)) {
+        stack<vertexTeam5> rev;
+        while(!(endLocation.x == 0 && endLocation.y == 0)){
             rev.push(endLocation);
             endLocation = prev[endLocation];
         }
 
-        vector<vertex> actual;
+        vector<vertexTeam5> actual;
         while(!rev.empty()) {
             actual.push_back(rev.top());
             rev.pop();
         }
 
+        actual.emplace(actual.begin(),start);
         return actual;
     }
 
@@ -181,13 +196,34 @@ public:
 * postcondition: moves the car following DFS
 *
 */
-    DIRECTION DFS1TeamFive(vertex& v, vector<vertex>& s,
-        vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start) {
+    DIRECTION DFS1TeamFive(vertexTeam5& v, vector<vertexTeam5>& s,
+        vertexTeam5& toEnd, map<vertexTeam5,vector<vertexTeam5>>& adjacency_list,vector<vertexTeam5>& visited) {
         DIRECTION d = NORTH;
 
         while(v.iteration < 4) {
-            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d))) {
-                vertex v2 = addDirectionTeamFive(v, v.d);
+            vertexTeam5 v2 = addDirectionTeamFive(v, v.d);
+            if(!car->look(v.d)) {
+                v2.d = v.d;
+                if(v.d == SOUTH) {
+                    v2.dPrev = NORTH;
+                }
+                else if(v.d == NORTH) {
+                    v2.dPrev = SOUTH;
+                }
+                else if(v.d == EAST) {
+                    v2.dPrev = WEST;
+                }
+                else {
+                    v2.dPrev = EAST;
+                }
+                if(!isInAdjacencyListTeamFive(adjacency_list,v,v2)) {
+                    adjacency_list[v].push_back(v2);
+                    adjacency_list[v2].push_back(v);
+                }
+            }
+            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d)) &&
+                !isOnTeamFive(visited,v2)) {
+                visited.push_back(v2);
                 v.status = 1;
                 d = v.d;
                 v2.dPrev = d;
@@ -203,17 +239,13 @@ public:
                 else {
                     v2.dPrev = EAST;
                 }
-                v2.d = d;
+                v2.d = NORTH;
                 v.d = DIRECTION((v.d + 1) % 4);
                 v.iteration += 1;
                 s[0] = v;
                 v2.status = 0;
                 v2.iteration = 0;
                 toEnd = v2;
-                if(!isInAdjacencyListTeamFive(adjacency_list, v, v2)) {
-                    adjacency_list[v].push_back(v2);
-                    adjacency_list[v2].push_back(v);
-                }
                 s.emplace(s.begin(), v2);
                 return d;
             }
@@ -225,7 +257,6 @@ public:
         s.erase(s.begin());
 
         if(s.empty()) {
-            start = true;
             return d;
         }
 
@@ -248,16 +279,35 @@ public:
 * postcondition: moves the car following DFS
 *
 */
-    DIRECTION DFS2TeamFive(vertex& v, vector<vertex>& s,
-        vertex& toEnd, map<vertex,vector<vertex>>& adjacency_list, bool& start ,map<vertex,vector<vertex>>& visited) {
-
+   DIRECTION DFS2TeamFive(vertexTeam5& v, vector<vertexTeam5>& s,
+        vertexTeam5& toEnd, map<vertexTeam5,vector<vertexTeam5>>& adjacency_list, vector<vertexTeam5>& visited,vertexTeam5& end, vector<vertexTeam5> &done) {
         DIRECTION d = NORTH;
-        DIRECTION oldD = v.d;
+        DIRECTION oldV = v.d;
         while(v.iteration < 4) {
-            vertex v2 = addDirectionTeamFive(v, v.d);
-            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d)) &&  !isInAdjacencyListTeamFive(adjacency_list,v,v2)
-                && !findTeam5(visited[v],v2)) {
-                    visited[v].push_back(v2);
+            vertexTeam5 v2 = addDirectionTeamFive(v, v.d);
+            if(!car->look(v.d)) {
+                if(!isInAdjacencyListTeamFive(adjacency_list,v,v2)) {
+                    v2.d = v.d;
+                    if(v.d == SOUTH) {
+                        v2.dPrev = NORTH;
+                    }
+                    else if(v.d == NORTH) {
+                        v2.dPrev = SOUTH;
+                    }
+                    else if(v.d == EAST) {
+                        v2.dPrev = WEST;
+                    }
+                    else {
+                        v2.dPrev = EAST;
+
+                    }
+                        adjacency_list[v].push_back(v2);
+                        adjacency_list[v2].push_back(v);
+                }
+            }
+            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d))
+                && !findTeam5(visited,v2) && !isOnTeamFive(done,v2)) {
+                    visited.push_back(v2);
 
                     v.status = 1;
                     d = v.d;
@@ -274,18 +324,13 @@ public:
                     else {
                         v2.dPrev = EAST;
                     }
-                    v2.d = d;
-                    visited[v2].push_back(v);
+                    v2.d = NORTH;
                     v.d = DIRECTION((v.d + 1) % 4);
                     v.iteration += 1;
                     s[0] = v;
                     v2.status = 0;
                     v2.iteration = 0;
                     toEnd = v2;
-                    if(!isInAdjacencyListTeamFive(adjacency_list, v, v2)) {
-                        adjacency_list[v].push_back(v2);
-                        adjacency_list[v2].push_back(v);
-                    }
                     s.emplace(s.begin(), v2);
                     return d;
             }
@@ -296,11 +341,12 @@ public:
         }
 
         v.iteration = 0;
-        v.d=oldD;
+        v.d=oldV;
+
         while(v.iteration < 4) {
-            vertex v2 = addDirectionTeamFive(v, v.d);
-            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d)) && !findTeam5(visited[v],v2)) {
-                visited[v].push_back(v2);
+            vertexTeam5 v2 = addDirectionTeamFive(v, v.d);
+            if(!car->look(v.d) && !isOnTeamFive(s, addDirectionTeamFive(v, v.d))
+                && !isOnTeamFive(done,v2)) {
                 v.status = 1;
                 d = v.d;
                 v2.dPrev = d;
@@ -316,13 +362,12 @@ public:
                 else {
                     v2.dPrev = EAST;
                 }
-                v2.d = d;
+                v2.d = NORTH;
                 v.d = DIRECTION((v.d + 1) % 4);
                 v.iteration += 1;
                 s[0] = v;
                 v2.status = 0;
                 v2.iteration = 0;
-                visited[v2].push_back(v);
                 toEnd = v2;
                 s.emplace(s.begin(), v2);
                 return d;
@@ -333,6 +378,7 @@ public:
 
         v.status = 2;
         s.erase(s.begin());
+        done.push_back(v);
 
         if(s.empty()) {
             return d;
@@ -359,29 +405,27 @@ public:
 *
 */
     DIRECTION nextMoveTeamFive(int run = 0) {
-        static queue<vertex> q;
-        static vector<vertex> s;
-        static map<vertex,vector<vertex>> adjacency_list;
+        static queue<vertexTeam5> q;
+        static vector<vertexTeam5> s;
+        static map<vertexTeam5,vector<vertexTeam5>> adjacency_list;
         static bool start = true;
         static int pathInd = 0;
-        static vertex starting;
-        static vertex end;
-        static vertex toEnd;
-        static bool gotStart = false;
-        static vector<vertex> rev;
-        static map<vertex,vertex> path;
-        static bool justReset = true;
+        static vertexTeam5 end;
+        static vertexTeam5 toEnd;
+        static vector<vertexTeam5> rev;
+        static map<vertexTeam5,vertexTeam5> path;
         static int currRun = -1;
-        static map<vertex,vector<vertex>> visited;
+        static vector<vertexTeam5> visited;
+        static vector<vertexTeam5> done;
 
 
         DIRECTION d = NORTH;
 
-        vertex v(0, 0, NORTH, 0, NORTH);
+        vertexTeam5 v(0, 0, NORTH, 0, NORTH);
 
         if(currRun < run) {
             if(run == 1) {
-
+                start = false;
                 end = toEnd;
             }
             s.clear();
@@ -394,23 +438,33 @@ public:
 
         v = s.at(0);
 
-        if(justReset) {
-            justReset = false;
-        }
 
         if(run == 0) {
-            return DFS1TeamFive(v, s, toEnd, adjacency_list, start);
+            return DFS1TeamFive(v, s, toEnd, adjacency_list,visited);
         }
 
         if(run == 1) {
-            return DFS2TeamFive(v, s, toEnd, adjacency_list, start,visited);
+            return DFS2TeamFive(v, s, toEnd, adjacency_list,visited,end,done);
         }
 
         if(run > 1) {
             if(pathInd == 0) {
                 rev = BFSTeamFive(adjacency_list, v, end, q);
             }
-            return rev.at(pathInd++).d; //TODO: crash here
+            DIRECTION gd = WEST;
+            DIRECTION n = NORTH;
+            for(int i = 0; i < 4; ++i) {
+                gd = DIRECTION(n+i);
+                vertexTeam5 u(rev.at(pathInd).x,rev.at(pathInd).y,
+                    NORTH,0,NORTH);
+                u = addDirectionTeamFive(u,gd);
+                if(u.x==rev.at(pathInd+1).x && u.y==rev.at(pathInd+1).y) {
+                    ++pathInd;
+                    return gd;
+                }
+
+            }
+
         }
 
         return d;
